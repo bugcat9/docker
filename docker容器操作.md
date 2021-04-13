@@ -84,6 +84,31 @@ d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago     Exited (0
 
 查看所有容器(包括已经停止的)使用`docker container ls -a`
 
+#### 后台运行
+
+前面都是在前景运行，一般来说我们都是让容器在后台中运行，而这也比较简单直接加`-d`即可。
+
+**但是后台运行并不是一直运行**，这和`docker run` 指定的命令有关，和 `-d` 参数无关。
+
+使用 `-d` 参数启动后会返回一个唯一的 id，也可以通过 `docker container ls` 命令来查看容器信息。
+
+比如：
+
+```
+[root@VM-0-12-centos ~]# docker run -d  ubuntu:18.04 /bin/echo 'Hello world'
+1d5842df536283ab8fa632bf092d95df997e4c11290b66209ed4addb57264921
+[root@VM-0-12-centos ~]# docker container logs 1d5842df536283ab8fa632bf092d95df997e4c11290b66209ed4addb57264921
+Hello world
+[root@VM-0-12-centos ~]# docker container ls -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED              STATUS                          PORTS     NAMES
+1d5842df5362   ubuntu:18.04   "/bin/echo 'Hello wo…"   About a minute ago   Exited (0) About a minute ago             naughty_bardeen
+1fb5652fc3f3   ubuntu:18.04   "/bin/bash"              24 hours ago         Exited (0) 24 hours ago                   boring_saha
+4335143fda62   ubuntu:18.04   "/bin/echo 'Hello wo…"   24 hours ago         Exited (0) 24 hours ago                   peaceful_franklin
+d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago          Exited (0) 2 weeks ago                    zen_almeida
+```
+
+我们看到我们使用` docker container logs [container ID or NAMES]`查看到后台输出的hello world，并且可以看到输出完容器就自动停止了
+
 ### 启动已终止容器
 
 可以利用 `docker container start` 命令，直接将一个已经终止（`exited`）的容器启动运行。
@@ -99,3 +124,41 @@ CONTAINER ID   IMAGE          COMMAND       CREATED         STATUS          PORT
 当然其实可以直接使用`docker start 1fb5652fc3f3`,但是我感觉加一个`container`显得更加清楚
 
 更多
+
+## 停止容器
+
+终止容器比较简单，可以使用 `docker container stop` 来终止一个运行中的容器。
+
+**比如：**
+
+我们使用`-d`让后台运行一个容器并且查看一下输出情况
+
+```
+[root@VM-0-12-centos ~]# docker run -d ubuntu:18.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"
+fdacd170a371e98f6d81bc5210c7ec889e3170722daba9bfa5f600f06ac43cc0
+[root@VM-0-12-centos ~]# docker container ls
+CONTAINER ID   IMAGE          COMMAND                  CREATED              STATUS              PORTS     NAMES
+fdacd170a371   ubuntu:18.04   "/bin/sh -c 'while t…"   About a minute ago   Up About a minute             tender_feynman
+[root@VM-0-12-centos ~]# docker container logs fdacd170a371
+hello world
+hello world
+hello world
+hello world
+hello world
+```
+
+然后我们使用 `docker container stop` 
+
+```
+[root@VM-0-12-centos ~]# docker container stop  fdacd170a371
+fdacd170a371
+[root@VM-0-12-centos ~]# docker container ls -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS                        PORTS     NAMES
+fdacd170a371   ubuntu:18.04   "/bin/sh -c 'while t…"   6 minutes ago    Exited (137) 17 seconds ago             tender_feynman
+1d5842df5362   ubuntu:18.04   "/bin/echo 'Hello wo…"   12 minutes ago   Exited (0) 12 minutes ago               naughty_bardeen
+1fb5652fc3f3   ubuntu:18.04   "/bin/bash"              24 hours ago     Exited (0) 24 hours ago                 boring_saha
+4335143fda62   ubuntu:18.04   "/bin/echo 'Hello wo…"   24 hours ago     Exited (0) 24 hours ago                 peaceful_franklin
+d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago      Exited (0) 2 weeks ago                  zen_almeida
+```
+
+可以看到我们刚刚停下 的容器
