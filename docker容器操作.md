@@ -162,3 +162,168 @@ d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago      Exited (
 ```
 
 可以看到我们刚刚停下 的容器
+
+## 进入容器
+
+在使用 `-d` 参数时，容器启动后会进入后台。
+
+某些时候需要进入容器进行操作，包括使用 `docker attach` 命令或 `docker exec` 命令，推荐大家使用 `docker exec` 命令，原因会在下面说明。
+
+### `attac`命令
+
+下面示例如何使用 `docker attach` 命令。
+
+```
+[root@VM-0-12-centos ~]# docker run -dit ubuntu
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+a70d879fa598: Pull complete 
+c4394a92d1f8: Pull complete 
+10e6159c56c0: Pull complete 
+Digest: sha256:3c9c713e0979e9bd6061ed52ac1e9e1f246c9495aa063619d9d695fb8039aa1f
+Status: Downloaded newer image for ubuntu:latest
+e1dda0f1ba0102acaef7cc2343a10b8b0cb3376c7761a5db055e093730c3a0f1
+[root@VM-0-12-centos ~]#  docker container ls
+CONTAINER ID   IMAGE     COMMAND       CREATED          STATUS          PORTS     NAMES
+e1dda0f1ba01   ubuntu    "/bin/bash"   22 seconds ago   Up 21 seconds             zealous_chaplygin
+[root@VM-0-12-centos ~]# docker attach e1dd
+root@e1dda0f1ba01:/#  
+```
+
+*注意：* 如果从这个 stdin 中 exit，会导致容器的停止。
+
+```
+root@e1dda0f1ba01:/# exit
+exit
+[root@VM-0-12-centos ~]# docker container ls -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED              STATUS                      PORTS     NAMES
+e1dda0f1ba01   ubuntu         "/bin/bash"              About a minute ago   Exited (0) 16 seconds ago             zealous_chaplygin
+fdacd170a371   ubuntu:18.04   "/bin/sh -c 'while t…"   24 hours ago         Exited (137) 23 hours ago             tender_feynman
+1d5842df5362   ubuntu:18.04   "/bin/echo 'Hello wo…"   24 hours ago         Exited (0) 24 hours ago               naughty_bardeen
+1fb5652fc3f3   ubuntu:18.04   "/bin/bash"              2 days ago           Exited (0) 47 hours ago               boring_saha
+4335143fda62   ubuntu:18.04   "/bin/echo 'Hello wo…"   2 days ago           Exited (0) 2 days ago                 peaceful_franklin
+d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago          Exited (0) 2 weeks ago                zen_almeida
+```
+
+### `exec` 命令
+
+`-i -t`命令
+
+`docker exec` 后边可以跟多个参数，这里主要说明 `-i` `-t` 参数。
+
+只用 `-i` 参数时，由于没有分配伪终端，界面没有我们熟悉的 Linux 命令提示符，但命令执行结果仍然可以返回。
+
+当 `-i` `-t` 参数一起使用时，则可以看到我们熟悉的 Linux 命令提示符。
+
+```
+[root@VM-0-12-centos ~]# docker run -dit ubuntu
+8a61ea2578cbad7035fd175325b244b30af5daae790a804950183bfb067dcde0
+[root@VM-0-12-centos ~]# docker container ls
+CONTAINER ID   IMAGE     COMMAND       CREATED         STATUS         PORTS     NAMES
+8a61ea2578cb   ubuntu    "/bin/bash"   7 seconds ago   Up 5 seconds             practical_solomon
+[root@VM-0-12-centos ~]# docker exec -i 8a61  bash
+ls
+bin
+boot
+dev
+etc
+home
+lib
+lib32
+lib64
+libx32
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+exit
+[root@VM-0-12-centos ~]# docker exec -it 8a61 bash
+root@8a61ea2578cb:/# 
+```
+
+如果从这个 stdin 中 exit，不会导致容器的停止。这就是为什么推荐大家使用 `docker exec` 的原因。
+
+更多参数说明请使用 `docker exec --help` 查看。
+
+```
+[root@VM-0-12-centos ~]# docker exec --help
+
+Usage:  docker exec [OPTIONS] CONTAINER COMMAND [ARG...]
+
+Run a command in a running container
+
+Options:
+  -d, --detach               Detached mode: run command in the background
+      --detach-keys string   Override the key sequence for detaching a container
+  -e, --env list             Set environment variables
+      --env-file list        Read in a file of environment variables
+  -i, --interactive          Keep STDIN open even if not attached
+      --privileged           Give extended privileges to the command
+  -t, --tty                  Allocate a pseudo-TTY
+  -u, --user string          Username or UID (format: <name|uid>[:<group|gid>])
+  -w, --workdir string       Working directory inside the container
+[root@VM-0-12-centos ~]# 
+```
+
+## 删除容器
+
+可以使用 `docker container rm` 来删除一个处于终止状态的容器。我们可以使用`--help`进行查看
+
+```
+[root@VM-0-12-centos ~]# docker container rm  --help
+
+Usage:  docker container rm [OPTIONS] CONTAINER [CONTAINER...]
+
+Remove one or more containers
+
+Options:
+  -f, --force     Force the removal of a running container (uses SIGKILL)
+  -l, --link      Remove the specified link
+  -v, --volumes   Remove anonymous volumes associated with the container
+```
+
+就举个简单的例子吧
+
+```
+[root@VM-0-12-centos ~]# docker container ls -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS                      PORTS     NAMES
+8a61ea2578cb   ubuntu         "/bin/bash"              12 minutes ago   Up 12 minutes                         practical_solomon
+e1dda0f1ba01   ubuntu         "/bin/bash"              16 minutes ago   Exited (0) 14 minutes ago             zealous_chaplygin
+fdacd170a371   ubuntu:18.04   "/bin/sh -c 'while t…"   24 hours ago     Exited (137) 24 hours ago             tender_feynman
+1d5842df5362   ubuntu:18.04   "/bin/echo 'Hello wo…"   24 hours ago     Exited (0) 24 hours ago               naughty_bardeen
+1fb5652fc3f3   ubuntu:18.04   "/bin/bash"              2 days ago       Exited (0) 2 days ago                 boring_saha
+4335143fda62   ubuntu:18.04   "/bin/echo 'Hello wo…"   2 days ago       Exited (0) 2 days ago                 peaceful_franklin
+d6f6eb64d97c   hello-world    "/hello"                 2 weeks ago      Exited (0) 2 weeks ago                zen_almeida
+[root@VM-0-12-centos ~]# docker container rm zealous_chaplygin 
+zealous_chaplygin
+[root@VM-0-12-centos ~]# 
+```
+
+用 `docker container ls -a` 命令可以查看所有已经创建的包括终止状态的容器，如果数量太多要一个个删除可能会很麻烦，用下面的命令可以清理掉所有处于终止状态的容器。
+
+```
+[root@VM-0-12-centos ~]# docker container prune
+WARNING! This will remove all stopped containers.
+Are you sure you want to continue? [y/N] y
+Deleted Containers:
+fdacd170a371e98f6d81bc5210c7ec889e3170722daba9bfa5f600f06ac43cc0
+1d5842df536283ab8fa632bf092d95df997e4c11290b66209ed4addb57264921
+1fb5652fc3f314c6f929c1e0a237362176f79b3c752ce57b31f164714207f0f5
+4335143fda62549f93068749d16ee54783a4d5a3350dc90088e5b4572a869c39
+d6f6eb64d97cd20e380053c5ff72ca238cab9bef91ddbab31a92e0cb39d5c221
+
+Total reclaimed space: 12B
+[root@VM-0-12-centos ~]# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND       CREATED          STATUS          PORTS     NAMES
+8a61ea2578cb   ubuntu    "/bin/bash"   14 minutes ago   Up 14 minutes             practical_solomon
+[root@VM-0-12-centos ~]# 
+```
+
